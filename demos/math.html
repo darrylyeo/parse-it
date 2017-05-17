@@ -1,0 +1,127 @@
+<style>
+	body {
+		background: #f6f6f6;
+		color: #333;
+		display: flex;
+		font-size: 7rem;
+		font-family: Fun Font;
+	}
+	#input {
+		position: fixed;
+		width: 100%;
+	}
+
+	span {
+		border-radius: 1px;
+		display: inline-block;
+		margin: auto;
+		position: relative;
+		transition: 0.3s;
+	/*}
+	span:hover {*/
+		/*box-shadow: rgba(0, 0, 0, 0.1) 0 0 0 0.1em, rgba(0, 0, 0, 0.1) 0 0 0 100vmax inset;*/
+		background-color: rgba(0, 0, 0, 0.1);
+		border-radius: 0.25em;
+		padding: 10px;
+		padding-top: 0.3em;
+		/*
+		background-color: rgba(255, 50, 50, 1);
+		filter: hue-rotate(50deg);*/
+	}
+	
+	span:before {
+		content: attr(type);
+		font-size: 0.2em;
+		position: absolute;
+		top: 10px;
+	/*}
+	span:not(:hover):before {
+		opacity: 0;
+	}*/
+
+	[type=EXPONENT] > :nth-child(2) {
+		display: none;
+	}
+	[type=EXPONENT] > :nth-child(3) {
+		vertical-align: super;
+		font-size: 0.6em;
+	}
+	[type=VARIABLE] {
+		font-style: italic;
+	}
+</style>
+
+<input type="text" id="input">
+
+<script>
+const input =
+	//'1'
+	//'abcd'
+	//'1+2=3'
+	//'sin(3)'
+	//'12'
+	//'12345'
+	'1^2'
+	//'(1/6)'
+	//'1+(2)'
+	//'1+2/3-4'
+	//'1/(1^(2/3))'
+	//'(1+(2+(3+(4+(5)))))'
+	//'0.1+2-3/(4^56)+(7!+8%-√9)!/sin(10^(11/12A))+13BC'
+	//'E=mc^2'
+
+const grammar = {
+	//*
+	'EQUALITY_OPERATOR': {one: ['=', '<', '>']},// /=|<|>/,
+
+	'FUNCTION_NAME': {one: [[...'sin'], [...'cos'], [...'tan'], [...'log']]},
+	
+	'EXPRESSION': {
+		'FACTOR': {
+			'CONSTANT': {repeat: /[\d.]/},
+			'VARIABLE': /[a-zA-Zα-ωΑ-Ω∞]/,
+			'FUNCTION': [{one: ['FUNCTION_NAME', 'VARIABLE']}, 'PARENTHESES'],
+			'PARENTHESES': ['(', {optional: 'EXPRESSION'}, ')'],
+			'ABSOLUTE_VALUE': ['|', 'EXPRESSION', '|'],
+			'EXPONENT': ['EXPRESSION', '^', 'EXPRESSION'],
+			'ROOT': ['√', 'EXPRESSION'],
+			'FACTORIAL': ['EXPRESSION', '!'],
+			'PERCENT': ['EXPRESSION', '%'],
+			'TERM': ['FACTOR', {repeat: [/[* /]/, 'FACTOR']}]
+		},
+		//'SUMMAND': [/[+-]/, 'FACTOR'],
+		'SUM': ['EXPRESSION', {repeat: [/[+-]/, 'FACTOR']}],
+	},
+	'EQUATION': ['EXPRESSION', {repeat: ['EQUALITY_OPERATOR', 'EXPRESSION']}],
+
+	/*/
+	// Testing
+	//'SEQUENCE': ['1', '2', 'X', ['X', 'X']],
+	//'X': [{optional: '1'}, '2', /3/],
+	//'ONE': {one: ['a', 'b', 'c']},
+	//*/
+}
+
+window.addEventListener('load', () => {
+	const $input = document.getElementById('input')
+	let $expression
+
+	function update(){
+		if($expression) $expression.remove()
+
+		const expression = parse($input.value)
+		$expression = expression.toDOM()
+
+		X(expression)
+		X(expression.toString())
+
+		document.body.append($expression)
+	}
+
+	$input.addEventListener('change', update)
+	$input.addEventListener('keyup', update)
+
+	$input.value = input
+	$input.dispatchEvent(new Event('change'))
+})
+</script>
